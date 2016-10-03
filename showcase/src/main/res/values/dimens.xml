@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="circle_min_height">20dp</dimen>
+    <dimen name="circle_max_height">100dp</dimen>
+
+    <dimen name="circle_stroke_width">20dp</dimen>
+
+</resources>
