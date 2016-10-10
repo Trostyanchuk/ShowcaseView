@@ -14,10 +14,10 @@
         android:layout_alignParentBottom="true"
         android:text="Hello World!" />
 
-    <com.library.showcase.ShowcaseView
-        android:id="@+id/showcaseView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true" />
+    <!--<com.library.showcase.ShowcaseView-->
+        <!--android:id="@+id/showcaseView"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="match_parent"-->
+        <!--android:layout_alignParentStart="true"-->
+        <!--android:layout_alignParentTop="true" />-->
 </RelativeLayout>

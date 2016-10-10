@@ -1,16 +1,16 @@
 package com.library.showcase;
 
-public class Circle {
+class Circle {
 
     private int radius;
     private float alpha;
 
-    public Circle(int radius, float alpha) {
+    Circle(int radius, float alpha) {
         this.radius = radius;
         this.alpha = alpha;
     }
 
-    public int getRadius() {
+    int getRadius() {
         return radius;
     }
 
@@ -19,7 +19,7 @@ public class Circle {
         return this;
     }
 
-    public void increaseRadius(int delta) {
+    void increaseRadius(int delta) {
         this.radius += delta;
     }
 
@@ -32,7 +32,7 @@ public class Circle {
         return this;
     }
 
-    public void decreaseAlpha(float delta) {
+    void decreaseAlpha(float delta) {
         this.alpha -= delta;
     }
 }

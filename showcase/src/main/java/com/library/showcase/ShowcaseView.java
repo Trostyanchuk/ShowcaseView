@@ -1,65 +1,46 @@
 package com.library.showcase;
 
-import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.RadialGradient;
-import android.graphics.Shader;
-import android.os.Build;
-import android.support.annotation.RequiresApi;
+import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.view.MotionEvent;
+import android.view.Gravity;
 import android.view.View;
-import android.view.ViewTreeObserver;
+import android.view.ViewGroup;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.library.showcase.constants.Part;
 
-public class ShowcaseView extends View implements View.OnTouchListener, View.OnClickListener {
+public class ShowcaseView extends RelativeLayout implements OnViewLocationCalculatedListener {
 
-    private int circlesNumber = Defaults.CIRCLES_NUMBER_DEFAULT;
-    private boolean animate = Defaults.ANIMATE;
+    private TextView mButton;
+    private TextView mInfoText;
+    private CirclesCanvasView mShowcaseCirclesView;
 
-    private int focusCircleWidth;
-    private int bgCircleWidth;
+    private ShowcaseParams params;
+    private String mButtonDefaultText;
+    private float mBtnDefaultTextSize;
+    private float mMsgDefaultTextSize;
+    private int mDefaultMargin;
 
-    private int bgCirclesColor;
-    private int bgColor;
+    private ShowcaseEventListener mShowcaseEventListener;
 
-    private float bgCirclesAlpha = Defaults.MAX_ALPHA;
-    private float bgCirclesStartAlpha = Defaults.MAX_ALPHA;
-    private float bgAlpha = Defaults.MAX_ALPHA;
-
-    private Paint clearPaint;
-    private Paint circlesLinePaint;
-    private Paint bgPaint;
-    private Paint fontPaint;
-
-    private List<Circle> circles;
-    private int growth;
-
-    int canvasWidth;
-    int canvasHeight;
-    int canvasPositionX;
-    int canvasPositionY;
-
-    int viewPositionX;
-    int viewPositionY;
-    int viewWidth;
-    int viewHeight;
-
-    float cX = -1;
-    float cY = -1;
-    int circleStartRadius;
-    int viewFocusRadius;
-
-    private ShowcaseEventListener listener;
+    private View.OnClickListener mBtnClickListener = new OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            if (mShowcaseEventListener != null) {
+                mShowcaseEventListener.onAcceptanceBtnClick();
+            }
+            mShowcaseCirclesView.stopAnimation();
+            if (getParent() != null && getParent() instanceof ViewGroup) {
+                ((ViewGroup) getParent()).removeView(ShowcaseView.this);
+            }
+        }
+    };
 
     public ShowcaseView(Context context) {
         super(context);
@@ -76,249 +57,170 @@ public class ShowcaseView extends View implements View.OnTouchListener, View.OnC
         init();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public ShowcaseView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        init();
-    }
-
     private void init() {
-        focusCircleWidth = (int) getContext().getResources().getDimension(R.dimen.circle_min_height);
-        bgCircleWidth = (int) getContext().getResources().getDimension(R.dimen.circle_stroke_width);
-        viewFocusRadius = focusCircleWidth;
+        mButtonDefaultText = getContext().getString(R.string.text_btn_ok);
 
-        bgCirclesColor = ContextCompat.getColor(getContext(), R.color.circles_default);
-        bgColor = ContextCompat.getColor(getContext(), R.color.bg_default);
+        mBtnDefaultTextSize = getContext().getResources().getDimension(R.dimen.btn_default_text_size);
+        mMsgDefaultTextSize = getContext().getResources().getDimension(R.dimen.msg_default_text_size);
 
-        circlesLinePaint = new Paint();
-        circlesLinePaint.setColor(bgCirclesColor);
-        circlesLinePaint.setAlpha((int) (bgCirclesAlpha * 255));
-        circlesLinePaint.setAntiAlias(true);
-        circlesLinePaint.setStyle(Paint.Style.STROKE);
-        circlesLinePaint.setStrokeWidth(bgCircleWidth);
+        mShowcaseCirclesView = new CirclesCanvasView(getContext());
+        mShowcaseCirclesView.setOnViewLocationCalculatedListener(this);
 
-        bgPaint = new Paint();
-        bgPaint.setColor(bgColor);
-        bgPaint.setAlpha((int) (bgAlpha * 255));
+        mDefaultMargin = (int) getResources().getDimension(R.dimen.default_margin);
 
-        clearPaint = new Paint();
-        clearPaint.setColor(Color.TRANSPARENT);
-        clearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-        clearPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-
-        getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int[] location = new int[2];
-                getLocationOnScreen(location);
-                canvasPositionX = location[0];
-                canvasPositionY = location[1];
-                canvasWidth = getMeasuredWidth();
-                canvasHeight = getMeasuredHeight();
-
-                circles = new ArrayList<>();
-                growth = (canvasWidth - viewPositionX) / circlesNumber;
-                int circleRectStartSize = focusCircleWidth + growth;
-                int radius = circleRectStartSize;
-                circleStartRadius = radius;
-                for (int i = 0; i < circlesNumber; i++) {
-                    radiusArray[i] = radius;
-                    radiusArrayInitial[i] = radius;
-                    alphaArray[i] = bgCirclesAlpha - i * 0.05f;
-
-                    circles.add(new Circle(radius, bgCirclesAlpha));
-
-                    circleRectStartSize += growth;
-                    radius = circleRectStartSize;
-                }
-
-                getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
+        RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT);
+        addView(mShowcaseCirclesView, params);
     }
 
-    public void addTargetView(final View view) {
-        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int[] location = new int[2];
-                view.getLocationOnScreen(location);
-                viewWidth = view.getMeasuredWidth();
-                viewHeight = view.getMeasuredHeight();
-                viewPositionX = location[0];
-                viewPositionY = location[1];
-
-                viewFocusRadius = viewWidth / 2 + bgCircleWidth / 2;
-                view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
-    }
-
-
-    int[] radiusArray = new int[circlesNumber];
-    int[] radiusArrayInitial = new int[circlesNumber];
-    float[] alphaArray = new float[circlesNumber];
-
-    private Bitmap bitmap;
-    private Canvas bitmapCanvas;
-
-    @SuppressLint("DrawAllocation")
-    public void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        float cX = getCenterX();
-        float cY = getCenterY();
-
-        if (bitmap == null || bitmapCanvas == null) {
-            bitmap = Bitmap.createBitmap(canvasWidth, canvasHeight, Bitmap.Config.ARGB_8888);
-            bitmapCanvas = new Canvas(bitmap);
-        }
-
-        bitmapCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        bitmapCanvas.drawPaint(bgPaint);
-        bitmapCanvas.drawCircle(cX, cY, viewFocusRadius, clearPaint);
-
-        for (int index = 0; index < circlesNumber; index++) {
-
-            Circle circle = circles.get(index);
-
-            circlesLinePaint.setShader(new RadialGradient(cX, cY, circle.getRadius(), bgCirclesColor, Color.TRANSPARENT, Shader.TileMode.CLAMP));
-            circlesLinePaint.setAlpha(alphaArray[index] <= 0 ? 0 : (int) (alphaArray[index] * 255));
-
-            bitmapCanvas.drawCircle(cX, cY, circle.getRadius(), circlesLinePaint);
-
-            circle.increaseRadius(5);
-            circle.decreaseAlpha(0.02f / (index + 1));
-
-            if (index == 0 && circle.getRadius() - circleStartRadius >= growth) {
-                circles.add(0, new Circle(circleStartRadius, bgCirclesStartAlpha));
-                circles.remove(circlesNumber);
-            }
-        }
-        canvas.drawBitmap(bitmap, 0, 0, null);
-
-        if (animate) {
-            postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    invalidate();
-                }
-            }, 25);
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (mShowcaseEventListener != null) {
+            mShowcaseEventListener.onShowcaseShown();
         }
     }
 
-    private float getCenterX() {
-        return cX == -1 ? viewPositionX + viewWidth / 2 : cX;
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+
+        if (mShowcaseEventListener != null) {
+            mShowcaseEventListener.onShowcaseDismiss();
+        }
     }
 
-    private float getCenterY() {
-        return cY == -1 ? viewPositionY + viewHeight / 2 - canvasPositionY : cY;
-    }
-
-
-    ///---------------------------///////
-
-    /**
-     * @param number
-     * @return
-     */
-    public ShowcaseView setCirclesNumber(int number) {
-        this.circlesNumber = number < Defaults.CIRCLES_NUMBER_MIN ? Defaults.CIRCLES_NUMBER_MIN :
-                number > Defaults.CIRCLES_NUMBER_MAX ? Defaults.CIRCLES_NUMBER_MAX :
-                        number;
-        return this;
-    }
-
-    /**
-     * @param color
-     * @return
-     */
-    public ShowcaseView setCirclesColor(int color) {
-        this.bgCirclesColor = color;
-        return this;
-    }
-
-    /**
-     * @param color
-     * @return
-     */
-    public ShowcaseView setViewBgColor(int color) {
-        this.bgColor = color;
-        return this;
-    }
-
-    /**
-     * @param focusCircleWidth
-     * @return
-     */
-    public ShowcaseView setFocusCircleWidth(int focusCircleWidth) {
-        this.focusCircleWidth = focusCircleWidth;
-        return this;
-    }
-
-    /**
-     * @param strokeWidth
-     * @return
-     */
-    public ShowcaseView setCircleStrokeWidth(int strokeWidth) {
-        this.bgCircleWidth = strokeWidth;
-        return this;
-    }
-
-    /**
-     * @param bgCirclesAlpha
-     * @return
-     */
-    public ShowcaseView setCirclesAlpha(float bgCirclesAlpha) {
-        this.bgCirclesAlpha = bgCirclesAlpha > Defaults.MAX_ALPHA ? Defaults.MAX_ALPHA :
-                bgCirclesAlpha < Defaults.MIN_ALPHA ? Defaults.MIN_ALPHA : bgCirclesAlpha;
-        return this;
-    }
-
-    /**
-     * @param backgroundAlpha
-     * @return
-     */
-    public ShowcaseView setBackgroundAlpha(float backgroundAlpha) {
-        this.bgAlpha = backgroundAlpha > Defaults.MAX_ALPHA ? Defaults.MAX_ALPHA :
-                backgroundAlpha < Defaults.MIN_ALPHA ? Defaults.MIN_ALPHA : backgroundAlpha;
-        return this;
-    }
 
     /**
      * @param listener
      * @return
      */
     public ShowcaseView setShowcaseEventListener(ShowcaseEventListener listener) {
-        this.listener = listener;
+        this.mShowcaseEventListener = listener;
         return this;
     }
 
     /**
-     *
+     * @param view
+     * @return
      */
-    public void startAnimation() {
-        animate = true;
-        invalidate();
+    public ShowcaseView addTargetView(final View view) {
+        this.mShowcaseCirclesView.addTargetView(view);
+        return this;
     }
 
     /**
-     *
+     * @param params
+     * @return
      */
+    public ShowcaseView setShowcaseParams(final ShowcaseParams params) {
+        this.params = params;
+        return this;
+    }
+
+    /**
+     * @param activity
+     */
+    public void show(Activity activity) {
+        ((ViewGroup) activity.getWindow().getDecorView()).addView(this);
+    }
+
+    public void startAnimation() {
+        this.mShowcaseCirclesView.startAnimation();
+    }
+
     public void stopAnimation() {
-        animate = false;
-    }
-
-
-    @Override
-    public void onClick(View view) {
-
+        this.mShowcaseCirclesView.stopAnimation();
     }
 
     @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
+    public void onViewLocated(Part locationOfFocus) {
 
-        
-        return false;
+        initCirclesViewWithParams();
+
+        //just randomly chosen
+        int textBtnId = 5;
+        int textId = 10;
+
+        int btnTextColor = params.getButtonTextColorRes() == -1 ? Color.BLACK :
+                ContextCompat.getColor(getContext(), params.getButtonTextColorRes());
+        int mgsTextColor = params.getMessageTextColorRes() == -1 ? Color.BLACK :
+                ContextCompat.getColor(getContext(), params.getMessageTextColorRes());
+
+
+        mButton = new TextView(getContext());
+        mButton.setText(!TextUtils.isEmpty(params.getButtonText()) ? params.getButtonText() : mButtonDefaultText);
+        mButton.setId(textBtnId);
+        mButton.setTextColor(btnTextColor);
+        mButton.setTextSize(params.getButtonTextSize() > 0 ? params.getButtonTextSize() : mBtnDefaultTextSize);
+        mButton.setTypeface(params.getButtonTypeface() != null ? params.getButtonTypeface() : Typeface.DEFAULT_BOLD);
+        mButton.setOnClickListener(mBtnClickListener);
+
+        if (!TextUtils.isEmpty(params.getMessageText())) {
+            mInfoText = new TextView(getContext());
+            mInfoText.setId(textId);
+            mInfoText.setText(params.getMessageText());
+            mInfoText.setTextColor(mgsTextColor);
+            mInfoText.setTextSize(params.getMessageTextSize() > 0 ? params.getMessageTextSize() : mMsgDefaultTextSize);
+            mInfoText.setGravity(Gravity.CENTER);
+            mInfoText.setTypeface(params.getMessageTypeface() != null ? params.getMessageTypeface() : Typeface.DEFAULT);
+        }
+        RelativeLayout.LayoutParams buttonParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        RelativeLayout.LayoutParams textParams = new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+
+        if (params.getButtonMargins() != null && params.getButtonMargins().length == 4) {
+            buttonParams.setMargins(params.getButtonMargins()[0], params.getButtonMargins()[1],
+                    params.getButtonMargins()[2], params.getButtonMargins()[3]);
+        } else {
+            buttonParams.setMargins(mDefaultMargin, mDefaultMargin, mDefaultMargin, mDefaultMargin);
+        }
+
+        if (params.getMessageMargins() != null && params.getMessageMargins().length == 4) {
+            buttonParams.setMargins(params.getMessageMargins()[0], params.getMessageMargins()[1],
+                    params.getMessageMargins()[2], params.getMessageMargins()[3]);
+        } else {
+            textParams.setMargins(mDefaultMargin, mDefaultMargin, mDefaultMargin, mDefaultMargin);
+        }
+
+        switch (locationOfFocus) {
+            case TOP_LEFT:
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+
+                textParams.addRule(RelativeLayout.ABOVE, textBtnId);
+                break;
+            case TOP_RIGHT:
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+
+                textParams.addRule(RelativeLayout.ABOVE, textBtnId);
+                break;
+            case BOTTOM_LEFT:
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+
+                textParams.addRule(RelativeLayout.BELOW, textBtnId);
+                break;
+            case BOTTOM_RIGHT:
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                buttonParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+
+                textParams.addRule(RelativeLayout.BELOW, textBtnId);
+                break;
+        }
+
+        mButton.setLayoutParams(buttonParams);
+        addView(mButton, buttonParams);
+
+        if (!TextUtils.isEmpty(params.getMessageText())) {
+            mInfoText.setLayoutParams(textParams);
+            addView(mInfoText, textParams);
+        }
+    }
+
+    private void initCirclesViewWithParams() {
+        mShowcaseCirclesView.initViewWithParams(params);
     }
 }

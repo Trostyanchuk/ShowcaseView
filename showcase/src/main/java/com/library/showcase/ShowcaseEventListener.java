@@ -5,4 +5,6 @@ public interface ShowcaseEventListener {
     void onShowcaseDismiss();
 
     void onShowcaseShown();
+
+    void onAcceptanceBtnClick();
 }

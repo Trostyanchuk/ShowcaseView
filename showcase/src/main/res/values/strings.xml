@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Showcase</string>
+
+    <string name="text_btn_ok">GOT IT</string>
+    <string name="text_explanation">This is default text just to show you how to use this widget. You can
+    add no message to view and it\'ll be not shown. Have a nice day!</string>
 </resources>
