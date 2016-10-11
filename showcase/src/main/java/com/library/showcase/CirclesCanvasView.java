@@ -93,11 +93,14 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
     }
 
     private void init() {
+        //paint for transparent region
         mClearPaint = new Paint();
         mClearPaint.setColor(Color.TRANSPARENT);
         mClearPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         mClearPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
 
+        //allows to get canvas size and return allocated part to listeners which should use this
+        // info to place other views (buttons, message) due to focus location
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -115,22 +118,43 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
     }
 
     CirclesCanvasView addTargetView(final View view) {
-        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                int[] location = new int[2];
-                view.getLocationOnScreen(location);
-                mViewWidth = view.getMeasuredWidth();
-                mViewHeight = view.getMeasuredHeight();
-                mViewPositionX = location[0];
-                mViewPositionY = location[1];
+        if (view.getViewTreeObserver() == null) {
+            view.addOnLayoutChangeListener(new OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int left, int top, int right, int bottom,
+                                           int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    if (left == 0 && top == 0 && right == 0 && bottom == 0)
+                        return;
+                    int[] location = new int[2];
+                    v.getLocationOnScreen(location);
 
-                view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-            }
-        });
+                    mViewWidth = view.getMeasuredWidth();
+                    mViewHeight = view.getMeasuredHeight();
+                    mViewPositionX = location[0];
+                    mViewPositionY = location[1];
+
+                    view.removeOnLayoutChangeListener(this);
+                }
+            });
+        } else {
+            view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    int[] location = new int[2];
+                    view.getLocationOnScreen(location);
+                    mViewWidth = view.getMeasuredWidth();
+                    mViewHeight = view.getMeasuredHeight();
+                    mViewPositionX = location[0];
+                    mViewPositionY = location[1];
+
+                    view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }
+            });
+        }
         return this;
     }
 
+    //find and return part which is allocated by circle focus
     private void returnFocusViewPartLocation() {
         if (onViewLocationCalculatedListener == null) {
             return;
@@ -144,6 +168,7 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
         } else {
             part = left ? Part.BOTTOM_LEFT : Part.BOTTOM_RIGHT;
         }
+        //notify listeners
         onViewLocationCalculatedListener.onViewLocated(part);
     }
 
@@ -196,24 +221,28 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
 
     private void initCircles() {
         mCircles = new ArrayList<>();
-        mGrowth = (mCanvasWidth - mViewPositionX) / mCirclesNumber;
-        int circleRectStartSize = mFocusCircleWidth + mGrowth;
-        int radius = mFocusCircleWidth + mBgCircleWidth;
+        if (mViewPositionX > mCanvasWidth / 2) {
+            mGrowth = mViewPositionX / mCirclesNumber;
+        } else {
+            mGrowth = (mCanvasWidth - mViewPositionX) / mCirclesNumber;
+        }
+        int circleRectStartSize = mFocusCircleWidth;
+        int radius = mFocusCircleWidth + mBgCircleWidth / 2;
         mCircleStartRadius = radius;
         for (int i = 0; i < mCirclesNumber; i++) {
             mRadiusArray[i] = radius;
             mRadiusArrayInitial[i] = radius;
-            mAlphaArray[i] = mBgCirclesAlpha - i * 0.05f;
+            mAlphaArray[i] = mBgCirclesAlpha - i * 0.06f;
 
             mCircles.add(new Circle(radius, mBgCirclesAlpha));
 
             circleRectStartSize += mGrowth;
-            radius = circleRectStartSize;
+            radius = circleRectStartSize + mBgCircleWidth / 2;
         }
     }
 
     @SuppressLint("DrawAllocation")
-    public void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
         float cX = getCenterX();
@@ -240,12 +269,13 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
 
             mBitmapCanvas.drawCircle(cX, cY, circle.getRadius(), mCirclesLinePaint);
 
-            circle.increaseRadius(5);
-            circle.decreaseAlpha(0.02f / (index + 1));
+            circle.increaseRadius(2);
+            circle.decreaseAlpha(0.03f / (index + 1));
 
             if (index == 0 && circle.getRadius() - mCircleStartRadius >= mGrowth) {
-                mCircles.add(0, new Circle(mCircleStartRadius, mBgCirclesStartAlpha));
+                mCircles.add(0, new Circle(mCircleStartRadius, mBgCirclesStartAlpha - 0.05f));
                 mCircles.remove(mCirclesNumber);
+                index++;
             }
         }
         canvas.drawBitmap(mBitmap, 0, 0, null);
@@ -272,7 +302,6 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-
     }
 
     @Override
@@ -287,9 +316,10 @@ class CirclesCanvasView extends View implements View.OnTouchListener {
         mHandler = null;
     }
 
-
-    //TODO describe
-
+    /**
+     * @param listener OnViewLocationCalculatedListener to notify when part of view allocated by
+     *                 focus circle was calculated
+     */
     public void setOnViewLocationCalculatedListener(OnViewLocationCalculatedListener listener) {
         this.onViewLocationCalculatedListener = listener;
     }

@@ -38,6 +38,12 @@ public class ShowcaseParams {
         return buttonText;
     }
 
+    /**
+     * Button to dismiss view. Default value is 'GOT IT'
+     *
+     * @param buttonText string will be displayed as button to dismiss
+     * @return instance
+     */
     public ShowcaseParams setButtonText(String buttonText) {
         this.buttonText = buttonText;
         return this;
@@ -47,6 +53,12 @@ public class ShowcaseParams {
         return messageText;
     }
 
+    /**
+     * Explanation text for focused view and any action with it
+     *
+     * @param messageText string will be displayed as explanation
+     * @return instance
+     */
     public ShowcaseParams setMessageText(String messageText) {
         this.messageText = messageText;
         return this;
@@ -56,6 +68,12 @@ public class ShowcaseParams {
         return buttonTextSize;
     }
 
+    /**
+     * Dismiss button text size. Default value is 15 dp, converted to px due to screen resolution
+     *
+     * @param buttonTextSize text size in px
+     * @return instance
+     */
     public ShowcaseParams setButtonTextSize(float buttonTextSize) {
         this.buttonTextSize = buttonTextSize;
         return this;
@@ -65,6 +83,12 @@ public class ShowcaseParams {
         return messageTextSize;
     }
 
+    /**
+     * Explanation message text size. Default value is 15 dp, converted to px due to screen resolution
+     *
+     * @param messageTextSize text size in px
+     * @return instance
+     */
     public ShowcaseParams setMessageTextSize(float messageTextSize) {
         this.messageTextSize = messageTextSize;
         return this;
@@ -74,6 +98,10 @@ public class ShowcaseParams {
         return buttonTextColorRes;
     }
 
+    /**
+     * @param buttonTextColorRes color resource ID for dismiss button text
+     * @return instance
+     */
     public ShowcaseParams setButtonTextColorRes(int buttonTextColorRes) {
         this.buttonTextColorRes = buttonTextColorRes;
         return this;
@@ -83,6 +111,10 @@ public class ShowcaseParams {
         return messageTextColorRes;
     }
 
+    /**
+     * @param messageTextColorRes color resource ID for explanation message
+     * @return instance
+     */
     public ShowcaseParams setMessageTextColorRes(int messageTextColorRes) {
         this.messageTextColorRes = messageTextColorRes;
         return this;
@@ -92,6 +124,10 @@ public class ShowcaseParams {
         return buttonTypeface;
     }
 
+    /**
+     * @param buttonTypeface Typeface instance for dismiss button, default value is {@link Typeface#DEFAULT}
+     * @return instance
+     */
     public ShowcaseParams setButtonTypeface(Typeface buttonTypeface) {
         this.buttonTypeface = buttonTypeface;
         return this;
@@ -101,6 +137,10 @@ public class ShowcaseParams {
         return messageTypeface;
     }
 
+    /**
+     * @param messageTypeface Typeface instance for explanation message, default value is {@link Typeface#DEFAULT}
+     * @return instance
+     */
     public ShowcaseParams setMessageTypeface(Typeface messageTypeface) {
         this.messageTypeface = messageTypeface;
         return this;
@@ -110,6 +150,11 @@ public class ShowcaseParams {
         return buttonMargins;
     }
 
+    /**
+     * @param buttonMargins layout margins for explanation message. Default value is
+     *                      [50dp, 50dp, 50dp, 50dp]. Should be array with 4 elements
+     * @return instance
+     */
     public ShowcaseParams setButtonMargins(int[] buttonMargins) {
         this.buttonMargins = buttonMargins;
         return this;
@@ -119,6 +164,11 @@ public class ShowcaseParams {
         return messageMargins;
     }
 
+    /**
+     * @param messageMargins layout margins for explanation message. Default value is
+     *                       [50dp, 50dp, 50dp, 50dp]. Should be array with 4 elements
+     * @return instance
+     */
     public ShowcaseParams setMessageMargins(int[] messageMargins) {
         this.messageMargins = messageMargins;
         return this;
@@ -128,6 +178,10 @@ public class ShowcaseParams {
         return showCircles;
     }
 
+    /**
+     * @param showCircles if true - circles will be drawn, will not otherwise
+     * @return instance
+     */
     public ShowcaseParams setShowCircles(boolean showCircles) {
         this.showCircles = showCircles;
         return this;
@@ -137,6 +191,10 @@ public class ShowcaseParams {
         return animate;
     }
 
+    /**
+     * @param animate if true - circles will be drawn with animation, will not otherwise
+     * @return instance
+     */
     public ShowcaseParams setAnimate(boolean animate) {
         this.animate = animate;
         return this;
@@ -146,6 +204,10 @@ public class ShowcaseParams {
         return focusCircleSize;
     }
 
+    /**
+     * @param focusCircleSize size of transparent circle for
+     * @return instance
+     */
     public ShowcaseParams setFocusCircleSize(int focusCircleSize) {
         this.focusCircleSize = focusCircleSize;
         return this;
@@ -155,6 +217,10 @@ public class ShowcaseParams {
         return circleWidth;
     }
 
+    /**
+     * @param circleWidth circle stroke width
+     * @return instance
+     */
     public ShowcaseParams setCircleWidth(int circleWidth) {
         this.circleWidth = circleWidth;
         return this;
@@ -164,6 +230,10 @@ public class ShowcaseParams {
         return backgroundColorRes;
     }
 
+    /**
+     * @param backgroundColorRes color resource for background view, should be R.color.{sample_res}
+     * @return instance
+     */
     public ShowcaseParams setBackgroundColorRes(int backgroundColorRes) {
         this.backgroundColorRes = backgroundColorRes;
         return this;
@@ -173,6 +243,10 @@ public class ShowcaseParams {
         return circlesColorRes;
     }
 
+    /**
+     * @param circlesColorRes color resource for circles, should be R.color.{sample_res}
+     * @return instance
+     */
     public ShowcaseParams setCirclesColorRes(int circlesColorRes) {
         this.circlesColorRes = circlesColorRes;
         return this;
@@ -182,6 +256,10 @@ public class ShowcaseParams {
         return circlesAlpha;
     }
 
+    /**
+     * @param circlesAlpha
+     * @return
+     */
     public ShowcaseParams setCirclesAlpha(float circlesAlpha) {
         this.circlesAlpha = circlesAlpha > Defaults.MAX_ALPHA ? Defaults.MAX_ALPHA :
                 circlesAlpha < Defaults.MIN_ALPHA ? Defaults.MIN_ALPHA : circlesAlpha;

@@ -1,5 +1,6 @@
 package com.library.showcase;
 
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
@@ -7,7 +8,9 @@ import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
@@ -15,7 +18,7 @@ import android.widget.TextView;
 
 import com.library.showcase.constants.Part;
 
-public class ShowcaseView extends RelativeLayout implements OnViewLocationCalculatedListener {
+public class ShowcaseView extends RelativeLayout implements OnViewLocationCalculatedListener, View.OnTouchListener {
 
     private TextView mButton;
     private TextView mInfoText;
@@ -58,6 +61,8 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
     }
 
     private void init() {
+        setOnTouchListener(this);
+
         mButtonDefaultText = getContext().getString(R.string.text_btn_ok);
 
         mBtnDefaultTextSize = getContext().getResources().getDimension(R.dimen.btn_default_text_size);
@@ -90,10 +95,9 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
         }
     }
 
-
     /**
-     * @param listener
-     * @return
+     * @param listener set {@link ShowcaseEventListener}
+     * @return instance
      */
     public ShowcaseView setShowcaseEventListener(ShowcaseEventListener listener) {
         this.mShowcaseEventListener = listener;
@@ -101,8 +105,9 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
     }
 
     /**
-     * @param view
-     * @return
+     * @param view View which we'l have focus for. Around this view it'll be calculated
+     *             transparent region
+     * @return instance
      */
     public ShowcaseView addTargetView(final View view) {
         this.mShowcaseCirclesView.addTargetView(view);
@@ -110,8 +115,8 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
     }
 
     /**
-     * @param params
-     * @return
+     * @param params User params with UI settings {@link ShowcaseParams}
+     * @return instance
      */
     public ShowcaseView setShowcaseParams(final ShowcaseParams params) {
         this.params = params;
@@ -119,9 +124,17 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
     }
 
     /**
-     * @param activity
+     * Start drawing showcase view focused on target in this activity window.
+     *
+     * @param activity current activity
      */
     public void show(Activity activity) {
+        if (activity == null) {
+            throw new NullPointerException("Activity must not be null!");
+        }
+        if (getParent() != null && getParent() instanceof ViewGroup) {
+            ((ViewGroup) getParent()).removeView(ShowcaseView.this);
+        }
         ((ViewGroup) activity.getWindow().getDecorView()).addView(this);
     }
 
@@ -136,7 +149,7 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
     @Override
     public void onViewLocated(Part locationOfFocus) {
 
-        initCirclesViewWithParams();
+        mShowcaseCirclesView.initViewWithParams(params);
 
         //just randomly chosen
         int textBtnId = 5;
@@ -152,7 +165,7 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
         mButton.setText(!TextUtils.isEmpty(params.getButtonText()) ? params.getButtonText() : mButtonDefaultText);
         mButton.setId(textBtnId);
         mButton.setTextColor(btnTextColor);
-        mButton.setTextSize(params.getButtonTextSize() > 0 ? params.getButtonTextSize() : mBtnDefaultTextSize);
+        mButton.setTextSize(TypedValue.COMPLEX_UNIT_PX, params.getButtonTextSize() > 0 ? params.getButtonTextSize() : mBtnDefaultTextSize);
         mButton.setTypeface(params.getButtonTypeface() != null ? params.getButtonTypeface() : Typeface.DEFAULT_BOLD);
         mButton.setOnClickListener(mBtnClickListener);
 
@@ -161,7 +174,7 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
             mInfoText.setId(textId);
             mInfoText.setText(params.getMessageText());
             mInfoText.setTextColor(mgsTextColor);
-            mInfoText.setTextSize(params.getMessageTextSize() > 0 ? params.getMessageTextSize() : mMsgDefaultTextSize);
+            mInfoText.setTextSize(TypedValue.COMPLEX_UNIT_PX, params.getMessageTextSize() > 0 ? params.getMessageTextSize() : mMsgDefaultTextSize);
             mInfoText.setGravity(Gravity.CENTER);
             mInfoText.setTypeface(params.getMessageTypeface() != null ? params.getMessageTypeface() : Typeface.DEFAULT);
         }
@@ -220,7 +233,11 @@ public class ShowcaseView extends RelativeLayout implements OnViewLocationCalcul
         }
     }
 
-    private void initCirclesViewWithParams() {
-        mShowcaseCirclesView.initViewWithParams(params);
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        ObjectAnimator.ofFloat(mButton, "translationX", 0, 25, -25, 25, -25, 15, -15, 6, -6, 0)
+                .setDuration(400)
+                .start();
+        return true;
     }
 }

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">ShowCaseView</string>
+
+    <string name="label_option">OPTION</string>
+
+    <string name="btn_message_text">Just press on \'GOT IT\' button to dismiss view</string>
+
+    <string name="toolbar_message_text">Currently we are focused on toolbar. Take a look on dismiss button:
+    its text is custom</string>
+    <string name="toolbar_btn_text">I SEE</string>
+
 </resources>
